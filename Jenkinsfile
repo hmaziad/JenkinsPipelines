@@ -11,7 +11,6 @@ pipeline {
             echo "This is build number $BUILD_NUMBER of demo $DEMO"
             bat '''
                echo "Using a multi-line shell step"
-               bat ./test.sh
             '''
          }
       }
