@@ -1,38 +1,34 @@
 pipeline {
    agent any
-   
+   parameters {
+        booleanParam(name: 'RC', defaultValue: false, description: 'Is this a Release Candidate')
+   }
    environment {
-       RELEASE='20.04'
+       VERSION= "0.1.0"
+       VERSION_RC = "rc.2"
    }
 
    stages {
-      stage('build') {
+      stage('Audit tools') {
          agent any
-
-         environment {
-               LOG_LEVEL='INFO'
-         }
-
          steps {
-            echo "Building release ${RELEASE} with log level ${LOG_LEVEL}..."
+            bat '''
+                git version
+            '''
          }
       }
-      stage('test') {
-               steps {
-                  echo "Testing. I can see release ${RELEASE}..."
-               }
+      stage('build') {
+            environment {
+                VERSION_SUFFIX = getVersionSuffix()
+            }
+           steps {
+              echo "Building version: ${VERSION} with suffix: ${VERSION_SUFFIX}..."
+           }
       }
 
-      stage('Deploy'){
-        input {
-            message 'Deploy?'
-            ok 'Do it!'
-            parameters {
-                string(name: 'TARGET_ENVIRONMENT', defaultValue: 'PROD', description: 'Target Deployment environment')
-            }
-        }
+      stage('Unit Test'){
          steps{
-            echo "Deploying release ${RELEASE} to environment ${TARGET_ENVIRONMENT}"
+            echo "Testing"
          }
       }
    }
@@ -41,4 +37,13 @@ pipeline {
             echo "Prints wehter eply happend or not, success or failure"
         }
    }
+}
+
+String getVersionSuffix(){
+    if(params.RC){
+        return env.VERSION_RC
+        }
+    else {
+        return env.VERSION_RC + '+ci.' + env.BUILD_NUMBER
+    }
 }
